@@ -1,3 +1,3 @@
-const mainWord = document.getElementsByTagName(p);
+const mainWord = document.querySelector("p");
 
-mainWord = "hello world";
+mainWord.innerText = "hello world";
