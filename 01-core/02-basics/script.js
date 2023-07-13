@@ -1,29 +1,65 @@
-const numFilter = () => parseInt(prompt("나이를 아라비아 숫자로 다시 입력하세요:"));
-const boundaryNumFilter = () => parseInt(prompt("올바른 나이를 입력하세요(범위 0<나이<130)"));
+// const ucFirst = (str) => {
+//   const arr = str.split('');
+//   arr[0] = arr[0].toUpperCase();
+//   return arr.join('');
+// }
 
+const ucFirst = (str) => str[0].toUpperCase() + str.slice(1);
 
-function checkAge(age, case1, case4) {
-  //isNaN : 숫자가 아니면 true
-  //prompt로 반환 받는 값은 문자열, 숫자는 isNaN("숫자") === false!!!!!!!!!!!!!
-  while (isNaN(age) || (age <= 0 || age >= 130)) {
-    if (isNaN(age)) {
-      age = case1();
+console.log(ucFirst("john") == "John");
+
+console.log("------------------------");
+
+const checkSpan = (str) => str.toLowerCase().includes("viagra") || str.toLowerCase().includes("xxx");
+console.log(checkSpan('buy ViAgRA now') == true);
+console.log(checkSpan('free xxxxx') == true);
+console.log(checkSpan("innocent rabbit") == false);
+
+console.log("------------------------");
+
+const truncate = (str, maxlength) => str.length < maxlength ? str : str.slice(0, maxlength - 1) + "…";
+
+console.log(truncate("What I'd like to tell on this topic is:", 20));
+console.log(truncate("Hi everyone!", 20));
+
+console.log("------------------------");
+
+const extractCurrencyValue = (str) => {
+  const arr = str.split("");
+  for (let index in arr) {
+    if (isNaN(+arr[index])) {
+      arr[index] = "";
     }
-    if (age <= 0 || age >= 130) {
-      age = case4();
+  }
+  return arr.join('');
+};
+
+console.log(extractCurrencyValue('$asdsd123fsdasdas120sdfsdf'));
+
+console.log("------------------------배열문제");
+
+
+
+const getMaxSubSum = (arr) => {
+
+  let maxSubSum = 0;
+
+  for (let i = 0; i < arr.length; i++) {
+    let sum = 0;
+    for (let j = i; j < arr.length; j++) {
+      sum += arr[j]
+      if (sum > maxSubSum) {
+        maxSubSum = sum
+      }
     }
   }
-
-  if (age > 18 && age < 130) {
-    alert("성인")
-  }
-
-  if (age < 0 && age <= 18) {
-    alert("미성년자");
-  }
-  alert("종료");
+  return maxSubSum
 }
 
-const inputAge = prompt("나이입력");
+console.log(getMaxSubSum([-1, 2, 3, -9]) == 5);
+console.log(getMaxSubSum([2, -1, 2, 3, -9]) == 6);
+console.log(getMaxSubSum([-1, 2, 3, -9, 11]) == 11);
+console.log(getMaxSubSum([-2, -1, 1, 2]) == 3);
+console.log(getMaxSubSum([100, -9, 2, -3, 5]) == 100);
+console.log(getMaxSubSum([1, 2, 3]) == 6);
 
-checkAge(inputAge, numFilter, boundaryNumFilter);
