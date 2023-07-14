@@ -1,65 +1,60 @@
-// const ucFirst = (str) => {
-//   const arr = str.split('');
-//   arr[0] = arr[0].toUpperCase();
-//   return arr.join('');
-// }
+const fruits = ["banana", "apple", "orange", "pineapple", "kiwi"];
 
-const ucFirst = (str) => str[0].toUpperCase() + str.slice(1);
+console.log(fruits.find((fruit) => fruit === "apple"));
 
-console.log(ucFirst("john") == "John");
+const numbers = [1, 4, 5, 7, 2, 9, 3];
 
-console.log("------------------------");
+console.log(numbers.filter((num) => num > 5));
 
-const checkSpan = (str) => str.toLowerCase().includes("viagra") || str.toLowerCase().includes("xxx");
-console.log(checkSpan('buy ViAgRA now') == true);
-console.log(checkSpan('free xxxxx') == true);
-console.log(checkSpan("innocent rabbit") == false);
+const nums = [1, 2, 3, 4, 5];
 
-console.log("------------------------");
+console.log(nums.map((num) => num * 10));
 
-const truncate = (str, maxlength) => str.length < maxlength ? str : str.slice(0, maxlength - 1) + "…";
+const persons = [
+  {
+    name: "Kim",
+    skills: ["JavaScript", "HTML", "CSS"],
+  },
+  {
+    name: "Lee",
+    skills: ["Java", "Python", "SQL"],
+  },
+  {
+    name: "Park",
+    skills: ["Java", "JavaScript", "CSS"],
+  },
+];
 
-console.log(truncate("What I'd like to tell on this topic is:", 20));
-console.log(truncate("Hi everyone!", 20));
+console.log(persons.filter((person) => person.skills.includes("Java")));
 
-console.log("------------------------");
+const people = [
+  { name: "John", age: 28 },
+  { name: "Jane", age: 24 },
+  { name: "Mike", age: 30 },
+];
 
-const extractCurrencyValue = (str) => {
-  const arr = str.split("");
-  for (let index in arr) {
-    if (isNaN(+arr[index])) {
-      arr[index] = "";
-    }
-  }
-  return arr.join('');
-};
+console.log(people.map((person) => person.name));
 
-console.log(extractCurrencyValue('$asdsd123fsdasdas120sdfsdf'));
+const words = ["javascript", "python", "java", "c", "ruby", "rust"];
 
-console.log("------------------------배열문제");
+console.log(words.filter((word) => word.length > 5));
 
+const people1 = [
+  { name: "John", age: 28 },
+  { name: "Jane", age: 24 },
+  { name: "Mike", age: 30 },
+];
 
+console.log(people1.filter((person) => person.age > 25));
 
-const getMaxSubSum = (arr) => {
+const chars = ["a", "b", "c", "a", "d", "e", "f", "a"];
 
-  let maxSubSum = 0;
+console.log(chars.filter((char) => char !== "a"));
 
-  for (let i = 0; i < arr.length; i++) {
-    let sum = 0;
-    for (let j = i; j < arr.length; j++) {
-      sum += arr[j]
-      if (sum > maxSubSum) {
-        maxSubSum = sum
-      }
-    }
-  }
-  return maxSubSum
-}
+const nums1 = [1, 2, 3, 4, 5];
 
-console.log(getMaxSubSum([-1, 2, 3, -9]) == 5);
-console.log(getMaxSubSum([2, -1, 2, 3, -9]) == 6);
-console.log(getMaxSubSum([-1, 2, 3, -9, 11]) == 11);
-console.log(getMaxSubSum([-2, -1, 1, 2]) == 3);
-console.log(getMaxSubSum([100, -9, 2, -3, 5]) == 100);
-console.log(getMaxSubSum([1, 2, 3]) == 6);
+console.log(nums1.map((num) => num + 5));
 
+const names = ["Jane", "John", "Jim", "Jill", "Jack"];
+
+console.log(names.indexOf("John"));
