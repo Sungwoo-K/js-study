@@ -1,13 +1,58 @@
-const ageTable = document.querySelector("#age-table");
-const allLabel = ageTable.querySelectorAll("label");
-const firstTd = ageTable.querySelector("td");
-const searchForm = document.querySelector("form[name=search]");
-const firstInputInForm = searchForm.querySelector("input");
-const lastInputInForm = document.querySelector("form[name=search] > input");
+const ul = document.querySelector("ul");
+const button = document.querySelector("button");
 
-firstTd.style.fontSize = "30px";
-searchForm.style.backgroundColor = "green";
-allLabel.forEach((element) => (element.style.background = "blue"));
+const addListHandler = () => {
+  const inputList = prompt("입력하세요.");
+  if (!inputList) {
+    return;
+  }
+  const li = document.createElement("li");
+  li.innerText = inputList;
+  ul.append(li);
+};
 
-firstInputInForm.style.fontSize = "40px";
-lastInputInForm.style.fontSize = "30px";
+button.addEventListener("click", addListHandler);
+
+let dataList = {
+  Fish: {
+    trout: {},
+    salmon: {},
+  },
+
+  Tree: {
+    Huge: {
+      sequoia: {},
+      oak: {},
+    },
+    Flowering: {
+      "apple tree": {},
+      magnolia: {},
+    },
+  },
+};
+
+let container = document.getElementById("container");
+
+const createTree = (containerBox, data) => {
+  containerBox.append(createList(data));
+};
+
+const createList = (data) => {
+  const ul = document.createElement("ul");
+
+  for (let prop in data) {
+    const li = document.createElement("li");
+    li.innerText = prop;
+    const innerList = createList(data[prop]);
+
+    if (innerList) {
+      li.append(innerList);
+    }
+
+    ul.append(li);
+  }
+
+  return ul;
+};
+
+createTree(container, dataList); // container 요소 내에 트리를 생성합니다.
