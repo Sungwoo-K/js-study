@@ -1,8 +1,12 @@
-const button = document.querySelector("button");
-const p = document.querySelector("p");
+const largeImg = document.querySelector("#largeImg");
+const thumbs = document.querySelector("#thumbs");
 
-const handleHidden = () => {
-  p.classList.toggle("hidden");
+const changeImg = (e) => {
+  e.preventDefault();
+  const img = e.target.src;
+  if (img) {
+    largeImg.src = img;
+  }
 };
 
-button.addEventListener("click", handleHidden);
+thumbs.addEventListener("click", changeImg);
