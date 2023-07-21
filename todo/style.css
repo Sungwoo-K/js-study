@@ -14,6 +14,10 @@ input:focus {
   outline: none;
 }
 
+li {
+  font-size: 30px;
+}
+
 button {
   color: #fff;
   border-radius: 5px;
@@ -123,7 +127,6 @@ article:first-of-type {
 article:nth-of-type(2) {
   width: 30%;
   display: flex;
-  justify-content: center;
 }
 
 article:last-of-type {
