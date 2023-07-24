@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="style.css" />
+    <title>Document</title>
+  </head>
+  <body>
+    <!-- 헤더 연락처 관리 프로그램 -->
+    <header>
+      <h2>연락처 관리 프로그램</h2>
+    </header>
+    <section>
+      <article>
+        <!-- 이름 전화번호 이메일 추가버튼 form -->
+        <form method="get">
+          <div>
+            <label for="name">이름</label>
+            <span>:</span>
+            <input id="name" type="text" placeholder="이름" />
+          </div>
+          <div>
+            <label for="phoneNumber">전화번호</label>
+            <span>:</span>
+            <input
+              id="phoneNumber"
+              maxlength="13"
+              type="text"
+              placeholder="전화번호"
+            />
+          </div>
+          <div>
+            <label for="email">이메일</label>
+            <span>:</span>
+            <input id="email" type="email" placeholder="이메일" />
+          </div>
+          <button>추가</button>
+        </form>
+      </article>
+      <article>
+        <!-- 저장된 연락처 리스트 테이블 <이름 연락처 이메일> -->
+        <h3>저장된 연락처 리스트:</h3>
+        <div></div>
+      </article>
+      <article>
+        <!-- 연락처 삭제   이름으로 입력하기  삭제 버튼 -->
+        <h3>연락처 삭제</h3>
+        <form method="get">
+          <label>이름을 입력하세요: <input type="text" required /></label>
+          <button>삭제</button>
+        </form>
+      </article>
+    </section>
+    <script src="contact.js"></script>
+  </body>
+</html>

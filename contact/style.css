@@ -1,0 +1,22 @@
+article:first-of-type > form {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 30px;
+  gap: 5px;
+}
+
+article:first-of-type > form label {
+  display: inline-block;
+  width: 150px;
+}
+
+article:last-of-type form {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+button {
+  width: 100px;
+  height: 30px;
+}
