@@ -136,6 +136,8 @@ const haddledeleteContact = (event) => {
       return;
     }
     const mappingFindNumber = mappingPhoneNumber(findNumber);
+
+    //전화번호를 입력해 전화번호와 일치하는 연락처 삭제
     if (numberOfElementsFoundInList(allNumber, mappingFindNumber) === 1) {
       for (let prop of allNumber) {
         if (prop.textContent === mappingFindNumber) {
