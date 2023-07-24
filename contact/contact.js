@@ -147,9 +147,7 @@ const haddledeleteContact = (event) => {
   }
 
   // 이름이 1개만 있을 때
-  if (
-    Array.from(allName).filter((td) => td.textContent == findName).length === 1
-  ) {
+  if (numberOfElementsFoundInList(allName, findName) === 1) {
     for (let prop of allName) {
       if (prop.textContent === findName) {
         prop.closest("tr").remove();
@@ -158,7 +156,7 @@ const haddledeleteContact = (event) => {
     }
   }
 
-  //삭제한 뒤 숫자 재정렬
+  //삭제한 뒤 순서숫자 재정렬
   if (exist) {
     const allNum = contactList.querySelectorAll("tr td:nth-of-type(1)");
     let count = 1;
