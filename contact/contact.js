@@ -1,186 +1,436 @@
-const addContactForm = document.querySelector("section > article > form");
-const addContactInput = addContactForm.querySelectorAll("input");
-const addContactBtn = addContactForm.querySelector("button");
-const contactList = document.querySelector("article:nth-of-type(2) > div");
-const deleteContactForm = document.querySelector(
-  "section > article:nth-of-type(3) > form"
-);
-const deleteContactInput = deleteContactForm.querySelector("input");
-const deleteContactBtn = deleteContactForm.querySelector("button");
+let currentPage = 0; // 현재 페이지 번호
+let isLastPage = false; // 마지막 페이지 인지 여부
+const PAGE_SIZE = 10; // 고정된 페이지 사이즈
+let currentQuery = ""; // 현재 검색 키워드
 
-/** 연락처가 하나도 존재하지 않을 시 텍스트 보여주기 */
-const nonExist = () => {
-  if (!contactList.firstElementChild) {
-    const h4 = document.createElement("h4");
-    h4.textContent = "연락처가 비어있습니다.";
-    contactList.append(h4);
-  }
-};
-
-nonExist();
-
-/** 01012345678 => 010-1234-5678 로 맵핑 */
-const mappingPhoneNumber = (value) => {
-  const arrNumber = Array.from(value).filter((num) => num >= 0);
-  result = [
-    ...arrNumber.slice(0, 3),
-    "-",
-    ...arrNumber.slice(3, 7),
-    "-",
-    ...arrNumber.slice(-4),
-  ].join("");
-  return result;
-};
-
-/** 찾을 요소의 갯수의 값을 리턴한다.
- * 첫번째 매개변수 : 탐색할 리스트,
- * 두번째 매개변수 : 찾을 요소
- */
-const numberOfElementsFoundInList = (nodeList, findElement) => {
-  return Array.from(nodeList).filter((td) => td.textContent === findElement)
-    .length;
-};
-
-// 연락처를 리스트에 추가하는 기능
-const handleAddContact = (event) => {
-  event.preventDefault();
-  const name = addContactForm.querySelector("#name");
-  const phoneNumber = addContactForm.querySelector("#phoneNumber");
-  const email = addContactForm.querySelector("#email");
-  const allNumber = contactList.querySelectorAll("tr td:nth-of-type(3)");
-
-  //요소 갯수 체크
-  if (Array.from(phoneNumber.value).filter((num) => num >= 0).length !== 11) {
-    alert("번호가 잘못되었습니다.");
-    return;
-  }
-
-  //공백 체크
-  if (Array.from(phoneNumber.value).find((element) => element === " ")) {
-    alert("공백을 빼주세요.");
-    return;
-  }
-
-  // 010으로 시작하는 것 체크
-  if (!phoneNumber.value.startsWith("010")) {
-    alert("010으로 시작해 주세요.");
-    return;
-  }
-
-  // 모든 input value 입력 체크
-  if (!(name.value && phoneNumber.value && email.value)) {
-    alert("3가지 정보를 모두 입력해주세요.");
-    return;
-  }
-
-  // 밑에 쓰여질 phoneNumber.value를 원하는 값으로 매핑
-  phoneNumber.value = mappingPhoneNumber(phoneNumber.value);
-
-  // 핸드폰 번호가 이미 존재하는 번호 체크(전화번호의 고유함을 위한 if문)
-  if (numberOfElementsFoundInList(allNumber, phoneNumber.value) === 1) {
-    alert("이미 존재하는 번호입니다.");
-    return;
-  }
-
-  // nodeName에 h4가 존재한다는 것은 nonExist();가 실행된 상태라는 것
-  if (contactList.firstElementChild.nodeName === "H4") {
-    contactList.firstElementChild.remove();
-    const table = document.createElement("table");
-    const tbody = document.createElement("tbody");
-    table.append(tbody);
-    contactList.append(table);
-  }
-
-  //연락처 리스트에 추가
-  const tbody = contactList.querySelector("tbody");
+// template: UI형식의 틀
+function createRow(name, phone, email, image) {
+  // 1. 요소 생성
   const tr = document.createElement("tr");
-  const tdNum = document.createElement("td");
-  const tdName = document.createElement("td");
-  const tdPhoneNumber = document.createElement("td");
-  const tdEmail = document.createElement("td");
-  tdNum.textContent = tbody.querySelectorAll("tr").length + 1;
-  tdName.textContent = name.value;
-  tdPhoneNumber.textContent = phoneNumber.value;
-  tdEmail.textContent = email.value;
-  tr.append(tdNum);
-  tr.append(tdName);
-  tr.append(tdPhoneNumber);
-  tr.append(tdEmail);
-  tbody.append(tr);
-  for (let prop of addContactInput) {
-    prop.value = "";
-  }
-};
 
-//연락처 삭제 기능
-//고유값 전화번호로 삭제하기로 하면 되나
-//이름으로 삭제하는 기능을 원한다고 했을 때
-//이름이 중복되었을시 고유값 전화번호로 삭제하는 기능
-const haddledeleteContact = (event) => {
-  event.preventDefault();
-  const allName = contactList.querySelectorAll("tr td:nth-of-type(2)");
-  const allNumber = contactList.querySelectorAll("tr td:nth-of-type(3)");
-  const tbody = contactList.querySelector("tbody");
-  const findName = deleteContactInput.value;
-  let exist = false;
-  if (!findName) {
-    alert("삭제할 이름을 입력해주세요.");
-    return;
+  // 2. 요소의 속성 설정
+  tr.dataset.email = email;
+  tr.innerHTML = /*html*/ `
+  <td>${name}</td>
+  <td>${phone}</td>
+  <td>${email}</td>  
+  <td>${
+    image
+      ? `<img width="auto" height="30" src="${image}" alt="${name}">`
+      : ""
+  }</td>
+  <td><button class="btn-modify">수정</button></td>
+  `;
+  return tr;
+}
+
+// page: 1, currentPage: 0
+// 데이터처리 정상적으로 조회되고, 화면 제대로 나왔으면
+// currentPage: 1
+async function getPagedList(page, query) {
+  let url = "";
+  // 검색 조건이 있다.
+  if (query) {
+    url = `http://localhost:8080/contacts/paging/search?page=${page}&size=${PAGE_SIZE}&query=${query}`;
+  } else {
+    url = `http://localhost:8080/contacts/paging?page=${page}&size=${PAGE_SIZE}`;
   }
 
-  // 이름이 여러개 존재할 시
-  if (numberOfElementsFoundInList(allName, findName) > 1) {
-    const findNumber = prompt("전화번호를 입력해주세요.");
-    if (!findNumber) {
-      alert("번호를 입력하지 않았습니다.");
+  const response = await fetch(url, {
+    headers: {
+      Authorization: `Bearer ${getCookie(
+        "token"
+      )}`,
+    },
+  });
+  // 401: 미인증, 403: 미인가(허가없는)
+  if ([401, 403].includes(response.status)) {
+    // 로그인 페이지로 튕김
+    alert("인증처리가 되지 않았습니다.");
+    window.location.href = "/login.html";
+  }
+  // 결과가 배열
+  const result = await response.json();
+  console.log(result);
+
+  const tbody = document.querySelector("tbody");
+
+  // 목록 초기화
+  tbody.innerHTML = "";
+  // 배열 반복을 해서 tr만든다음에 tbody 가장 마지막 자식에 추가
+  for (let item of result.content) {
+    tbody.append(
+      createRow(
+        item.name,
+        item.phone,
+        item.email,
+        item.image
+      )
+    );
+  }
+
+  currentPage = result.number; // 현재 페이지 설정
+  isLastPage = result.last; // 마지막 페이지 여부
+
+  // 이전/다음 버튼 활성화 처리
+  setBtnActive();
+}
+
+// 이전/다음 버튼 활성화 여부 처리
+function setBtnActive() {
+  const buttons =
+    document.forms[2].querySelectorAll("button");
+
+  const btnPrev = buttons[2];
+  const btnNext = buttons[3];
+
+  // 첫번째 페이지이면 이전 버튼 비활성화
+  if (currentPage === 0) {
+    btnPrev.disabled = true;
+  } else {
+    btnPrev.disabled = false;
+  }
+  // 마지막 페이지이면 다음 버튼 비활성화
+  if (isLastPage) {
+    btnNext.disabled = true;
+  } else {
+    btnNext.disabled = false;
+  }
+}
+
+// // 데이터 조회 및 목록 생성
+// (() => {
+//   window.addEventListener(
+//     "DOMContentLoaded",
+//     async () => {
+//       const response = await fetch(
+//         "http://localhost:8080/contacts"
+//       );
+//       // 결과가 배열
+//       const result = await response.json();
+//       console.log(result);
+
+//       const tbody =
+//         document.querySelector("tbody");
+
+//       // 배열 반복을 해서 tr만든다음에 tbody 가장 마지막 자식에 추가
+//       for (let item of result) {
+//         tbody.append(
+//           createRow(
+//             item.name,
+//             item.phone,
+//             item.email,
+//             item.image
+//           )
+//         );
+//       }
+//     }
+//   );
+// })();
+
+// 웹페이지 로딩이 완료되면, 페이징으로 데이터 조회 및 목록 생성
+(() => {
+  window.addEventListener(
+    "DOMContentLoaded",
+    () => {
+      // 첫번째 페이지 조회
+      getPagedList(0);
+    }
+  );
+})();
+
+// 이전/다음 페이징
+(() => {
+  // 이전/다음 버튼 선택
+  const buttons =
+    document.forms[2].querySelectorAll("button");
+
+  const btnPrev = buttons[2];
+  const btnNext = buttons[3];
+
+  // 이전 버튼
+  btnPrev.addEventListener("click", (e) => {
+    e.preventDefault();
+    currentPage > 0 &&
+      getPagedList(currentPage - 1, currentQuery);
+  });
+  // 다음 버튼
+  btnNext.addEventListener("click", (e) => {
+    e.preventDefault();
+    !isLastPage &&
+      getPagedList(currentPage + 1, currentQuery);
+  });
+})();
+
+// 검색 기능
+(() => {
+  const txtQuery =
+    document.forms[2].querySelector("input");
+  const btnSearch =
+    document.forms[2].querySelector("button");
+
+  btnSearch.addEventListener("click", (e) => {
+    e.preventDefault();
+    currentQuery = txtQuery.value;
+    getPagedList(0, currentQuery);
+  });
+
+  txtQuery.addEventListener("keyup", (e) => {
+    e.preventDefault();
+    if (e.key.toLocaleLowerCase() === "enter") {
+      currentQuery = txtQuery.value;
+      getPagedList(0, currentQuery);
+    }
+  });
+})();
+
+// 검색조건 초기화
+(() => {
+  const btnReset =
+    document.forms[2].querySelectorAll(
+      "button"
+    )[1];
+  btnReset.addEventListener("click", (e) => {
+    e.preventDefault();
+
+    // 검색조건 입력박스 초기화
+    document.forms[2].reset();
+
+    // 검색조건값 초기화
+    currentQuery = "";
+
+    // 검색조건이 초기화되면 0번페이지에서 다시 조회
+    getPagedList(0, currentQuery);
+  });
+})();
+
+// 추가폼 처리
+(() => {
+  const form = document.forms[0];
+  const inputs = form.querySelectorAll("input");
+
+  const name = inputs[0];
+  const phone = inputs[1];
+  const email = inputs[2];
+  const file = inputs[3]; // input type="file"
+
+  const add = form.querySelector("button");
+
+  add.addEventListener("click", (e) => {
+    e.preventDefault();
+
+    if (email.value === "") {
+      alert("이메일을 입력해주세요.");
       return;
     }
-    const mappingFindNumber = mappingPhoneNumber(findNumber);
 
-    //전화번호를 입력해 전화번호와 일치하는 연락처 삭제
-    if (numberOfElementsFoundInList(allNumber, mappingFindNumber) === 1) {
-      for (let prop of allNumber) {
-        if (prop.textContent === mappingFindNumber) {
-          prop.closest("tr").remove();
-          exist = true;
+    if (name.value === "") {
+      alert("이름을 입력해주세요.");
+      return;
+    }
+
+    if (phone.value === "") {
+      alert("전화번호를 입력해주세요.");
+      return;
+    }
+
+    // 데이터를 서버에 전송하고, UI요소 생성
+    async function createContact(image) {
+      /// --- 서버전송하면 UI 생성
+
+      // 서버에 데이터를 전송
+      // fetch(url, options)
+      const response = await fetch(
+        "http://localhost:8080/contacts",
+        {
+          // HTTP Method
+          method: "POST",
+          // 보낼 데이터 형식은 json
+          headers: {
+            "content-type": "application/json",
+          },
+          body: JSON.stringify({
+            email: email.value,
+            name: name.value,
+            phone: phone.value,
+            image: image ? image : null,
+          }),
         }
+      );
+      console.log(response);
+
+      const result = await response.json();
+      console.log(result);
+
+      // 화면에 요소를 추가하는 것은 데이처리가 정상적으로 된 다음에
+      // 서버에서 응답받은 데이터
+      const { data } = result;
+
+      // --- 3. 어딘가(부모, 다른요소)에 추가한다(append, prepend);
+      document
+        .querySelector("tbody")
+        .prepend(
+          createRow(
+            data.name,
+            data.phone,
+            data.email,
+            data.image
+          )
+        );
+      form.reset();
+    }
+
+    if (file.files[0]) {
+      // 파일이 있을 때
+      const reader = new FileReader();
+      // reader로 파일을 읽기가 완료되면 실행되면 이벤트 핸들러 함수
+      reader.addEventListener(
+        "load",
+        async (e) => {
+          console.log(e);
+          // file -> base64 data-url
+          const image = e.target.result;
+          createContact(image);
+        }
+      );
+      // 파일을 dataURL(base64)로 읽음
+      reader.readAsDataURL(file.files[0]);
+    } else {
+      // 파일이 없을 때
+      createContact();
+    }
+
+    // return;
+  });
+})();
+
+// 삭제폼 처리
+(() => {
+  const form = document.forms[1];
+
+  const email = form.querySelector("input");
+  const del = form.querySelector("button");
+
+  del.addEventListener("click", async (e) => {
+    e.preventDefault();
+
+    // 서버통신
+    await fetch(
+      `http://localhost:8080/contacts/${email.value}`,
+      {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${getCookie(
+            "token"
+          )}`,
+        },
       }
-    }
-  }
+    );
 
-  // 이름이 1개만 있을 때
-  if (numberOfElementsFoundInList(allName, findName) === 1) {
-    for (let prop of allName) {
-      if (prop.textContent === findName) {
-        prop.closest("tr").remove();
-        exist = true;
+    const tr = document.querySelector(
+      `tr[data-email="${email.value}"]`
+    );
+
+    if (!tr) {
+      alert("해당 이메일의 연락처 없습니다.");
+      return;
+    }
+
+    tr.remove();
+
+    form.reset();
+  });
+})();
+
+// 수정처리(이벤트 위임)
+(() => {
+  document
+    .querySelector("tbody")
+    .addEventListener("click", (e) => {
+      // 수정버튼을 클릭한 이벤트에 작동
+      if (
+        e.target.classList.contains("btn-modify")
+      ) {
+        // jsdoc type 힌트를 넣어줌
+        /** @type {HTMLButtonElement} */
+        const modifyBtn = e.target;
+        // button -> td -> tr
+        const row =
+          modifyBtn.parentElement.parentElement; // tr
+        // tr의 모든 데이터셀의 내부값 가져오기
+        const cells = row.querySelectorAll("td");
+        console.log(
+          cells[0].innerHTML,
+          cells[1].innerHTML,
+          cells[2].innerHTML
+        );
+
+        // 모달 레이어 띄우기
+        /** @type {HTMLDivElement} */
+        const layer = document.querySelector(
+          "#modify-layer"
+        );
+        layer.hidden = false;
+
+        // 모달 내부의 폼에 선택값을 채워 넣음
+        layer.querySelector("h3").innerHTML =
+          cells[2].innerHTML;
+        const inputs =
+          layer.querySelectorAll("input");
+        inputs[0].value = cells[0].innerHTML;
+        inputs[1].value = cells[1].innerHTML;
+
+        // 확인/취소 버튼이 이벤트 핸들러 추가
+        const buttons =
+          layer.querySelectorAll("button");
+        // 취소 버튼
+        buttons[1].addEventListener(
+          "click",
+          (e) => {
+            e.preventDefault();
+            layer.hidden = true;
+          }
+        );
+
+        // 수정 버튼
+        buttons[0].addEventListener(
+          "click",
+          async (e) => {
+            e.preventDefault();
+            // 셀이 있는 고정값
+            const email = cells[2].innerHTML;
+            // 입력값으로
+            const name = inputs[0].value;
+            const phone = inputs[1].value;
+
+            const options = {
+              method: "PUT",
+              headers: {
+                "content-type":
+                  "application/json",
+                Authorization: `Bearer ${getCookie(
+                  "token"
+                )}`,
+              },
+              body: JSON.stringify({
+                name,
+                phone,
+              }),
+            };
+            // 서버 연동
+            const response = await fetch(
+              `http://localhost:8080/contacts/${email}`,
+              options
+            );
+
+            console.log(response.status);
+
+            // 데이터셀의 값을 수정입력 폼의 값으로 바꿨음.
+            cells[0].innerHTML = inputs[0].value;
+            cells[1].innerHTML = inputs[1].value;
+            layer.hidden = true;
+          }
+        );
       }
-    }
-  }
-
-  //삭제한 뒤 순서숫자 재정렬
-  if (exist) {
-    const allNum = contactList.querySelectorAll("tr td:nth-of-type(1)");
-    let count = 1;
-    for (let prop of allNum) {
-      prop.textContent = count++;
-    }
-  }
-
-  //연락처 존재하지 않을 시
-  if (!exist) {
-    alert("연락처가 일치하지 않거나 존재하지 않습니다.");
-    return;
-  }
-
-  if (!tbody.firstElementChild) {
-    //빈 테이블 요소 삭제
-    tbody.closest("table").remove();
-    nonExist();
-  }
-
-  deleteContactInput.value = "";
-};
-
-addContactBtn.addEventListener("click", handleAddContact);
-deleteContactBtn.addEventListener("click", haddledeleteContact);
+    });
+})();
